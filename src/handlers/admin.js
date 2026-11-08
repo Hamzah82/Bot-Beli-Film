@@ -8,6 +8,10 @@ const filmService = require('../services/filmService');
 const telegramService = require('../services/telegramService');
 const formatCurrency = require('../utils/formatCurrency');
 const { escapeMarkdown } = require('../utils/escape');
+const fs = require('fs').promises;
+const fsSync = require('fs');
+const path = require('path');
+const archiver = require('archiver');
 
 // Store pagination state per admin with TTL
 const paginationStates = new Map();
@@ -599,22 +603,134 @@ Melihat daftar film dengan pagination.
 Menerima pembayaran.
 Cara: Reply notifikasi transaksi, lalu kirim command.
 
-\`/tolak <Alasan>\`
+  \`/tolak <Alasan>\`
 Menolak pembayaran.
 Cara: Reply notifikasi transaksi, lalu kirim command.
 Contoh: /tolak Bukti tidak valid
 
+📦 *Backup Data*
+
+\`/backup\`
+Membuat backup seluruh data dan mengirimkan file .zip ke admin.
+Backup berisi: films.json, transactions.json, users.json, admins.json
+
 📝 *Tips*
 - Gunakan tombol inline untuk approve/reject
 - Cek detail film dengan /film
+- Backup data secara berkala dengan /backup
 - Link share: https://t.me/BOT_USERNAME?start=FILM_ID
 
 ⚠️ *Peringatan*
 - Hanya admin yang bisa menggunakan command ini
 - Transaksi yang sudah diproses tidak bisa diubah
-- Pastikan video sudah di-upload sebelum promosi`;
+- Pastikan video sudah di-upload sebelum promosi
+- Backup disimpan maksimal 5 file terakhir`;
 
   return ctx.reply(message, { parse_mode: 'Markdown' });
+}
+
+/**
+ * Handle /backup command - Create and send backup of data folder
+ */
+async function handleBackup(ctx) {
+  try {
+    const dataDir = path.join(__dirname, '../../data');
+    const backupDir = path.join(__dirname, '../../backups');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupFilename = `backup-${timestamp}.zip`;
+    const backupPath = path.join(backupDir, backupFilename);
+    
+    // Send processing message
+    const processingMsg = await ctx.reply('⏳ Membuat backup data...');
+    
+    // Ensure backup directory exists
+    await fs.mkdir(backupDir, { recursive: true });
+    
+    // Create zip archive
+    await new Promise((resolve, reject) => {
+      const output = fsSync.createWriteStream(backupPath);
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      
+      output.on('close', () => {
+        console.log(`Backup created: ${backupFilename} (${archive.pointer()} bytes)`);
+        resolve();
+      });
+      
+      archive.on('error', (err) => {
+        reject(err);
+      });
+      
+      archive.pipe(output);
+      
+      // Add all files from data directory
+      archive.directory(dataDir, 'data');
+      
+      archive.finalize();
+    });
+    
+    // Delete processing message
+    await ctx.deleteMessage(processingMsg.message_id);
+    
+    // Get file stats
+    const stats = await fs.stat(backupPath);
+    const fileSizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
+    
+    // Send backup file to admin
+    const formattedTimestamp = new Date().toLocaleString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+    
+    await ctx.replyWithDocument(
+      {
+        source: backupPath,
+        filename: backupFilename
+      },
+      {
+        caption: `📦 *BACKUP DATA*\n\n` +
+        `📅 Waktu: ${formattedTimestamp}\n` +
+        `📊 Ukuran: ${fileSizeInMB} MB\n` +
+        `📁 File: ${backupFilename}\n\n` +
+        `Backup berisi:\n` +
+        `• films.json\n` +
+        `• transactions.json\n` +
+        `• users.json\n` +
+        `• admins.json`,
+        parse_mode: 'Markdown'
+      }
+    );
+    
+    // Clean up old backups (keep last 5)
+    try {
+      const backupFiles = await fs.readdir(backupDir);
+      const sortedFiles = backupFiles
+        .filter(f => f.startsWith('backup-') && f.endsWith('.zip'))
+        .sort()
+        .reverse();
+      
+      // Delete old backups beyond the last 5
+      for (let i = 5; i < sortedFiles.length; i++) {
+        const oldFile = path.join(backupDir, sortedFiles[i]);
+        await fs.unlink(oldFile);
+        console.log(`Deleted old backup: ${sortedFiles[i]}`);
+      }
+    } catch (cleanupError) {
+      console.error('Failed to cleanup old backups:', cleanupError.message);
+    }
+    
+  } catch (error) {
+    console.error('Backup failed:', error);
+    return ctx.reply(
+      `❌ Gagal membuat backup.\n\n` +
+      `Error: ${error.message}\n\n` +
+      `Pastikan folder data tersedia dan bot memiliki permission untuk write.`
+    );
+  }
 }
 
 module.exports = {
@@ -626,5 +742,6 @@ module.exports = {
   handleRejectCommand,
   handleApproveButton,
   handleRejectButton,
-  handleAdminHelp
+  handleAdminHelp,
+  handleBackup
 };

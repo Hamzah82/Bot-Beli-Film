@@ -28,7 +28,8 @@ const {
   handleRejectCommand,
   handleApproveButton,
   handleRejectButton,
-  handleAdminHelp
+  handleAdminHelp,
+  handleBackup
 } = require('./handlers/admin');
 
 // Validate configuration
@@ -186,6 +187,7 @@ function setupHandlers() {
   bot.command('film', adminOnly, handleFilmList);
   bot.command('terima', adminOnly, handleApproveCommand);
   bot.command('tolak', adminOnly, handleRejectCommand);
+  bot.command('backup', adminOnly, handleBackup);
   
   // Admin button callbacks for film pagination
   bot.action('film_prev', adminOnly, async (ctx) => {

@@ -16,7 +16,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "telegraf": "^4.16.3",
-    "dotenv": "^16.4.5"
+    "archiver": "^8.0.0",
+    "dotenv": "^16.4.5",
+    "telegraf": "^4.16.3"
   }
 }

@@ -1,5 +1,8 @@
 node_modules/
 .env
 data/
+backups/
 *.log
 .DS_Store
+health.json
+*.zip
