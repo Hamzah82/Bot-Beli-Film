@@ -95,15 +95,13 @@ function setupHandlers() {
       const fileId = photos[photos.length - 1].file_id;
       console.log('File ID:', fileId);
       return ctx.reply(
-        `File ID untuk foto ini:\n\n\`${fileId}\`\n\nCopy dan paste ke .env sebagai QRIS_IMAGE_FILE_ID`,
-        { parse_mode: 'Markdown' }
+        `File ID untuk foto ini:\n\n${fileId}\n\nCopy dan paste ke .env sebagai QRIS_IMAGE_FILE_ID`
       );
     } else if (replyTo?.video) {
       const fileId = replyTo.video.file_id;
       console.log('Video File ID:', fileId);
       return ctx.reply(
-        `File ID untuk video ini:\n\n\`${fileId}\`\n\nCopy dan simpan sesuai kebutuhan`,
-        { parse_mode: 'Markdown' }
+        `File ID untuk video ini:\n\n${fileId}\n\nCopy dan simpan sesuai kebutuhan`
       );
     } else {
       return ctx.reply(
