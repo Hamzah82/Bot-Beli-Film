@@ -55,15 +55,22 @@ Instruksi:
 
 Status: Menunggu pembayaran.`;
   
-  if (config.qrisImageFileId) {
-    await ctx.replyWithPhoto(config.qrisImageFileId, {
-      caption,
-      parse_mode: 'Markdown'
-    });
-  } else {
-    await ctx.reply(caption + '\n\n⚠️ QRIS belum dikonfigurasi. Pembayaran tidak dapat dilanjutkan.', {
-      parse_mode: 'Markdown'
-    });
+  try {
+    if (config.qrisImageFileId) {
+      console.log('Sending QRIS image with file_id:', config.qrisImageFileId);
+      await ctx.replyWithPhoto(config.qrisImageFileId, {
+        caption,
+        parse_mode: 'Markdown'
+      });
+      console.log('Payment instructions sent successfully');
+    } else {
+      await ctx.reply(caption + '\n\n⚠️ QRIS belum dikonfigurasi. Pembayaran tidak dapat dilanjutkan.', {
+        parse_mode: 'Markdown'
+      });
+    }
+  } catch (error) {
+    console.error('Error sending payment instructions:', error);
+    throw error;
   }
 }
 
