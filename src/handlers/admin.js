@@ -288,7 +288,7 @@ async function handleApproveCommand(ctx) {
   try {
     // Get user info
     const user = await require('../database').users.getByTelegramId(transaction.user_id);
-    const newCaption = `**PEMBAYARAN DITERIMA ✅**
+    const newCaption = `*PEMBAYARAN DITERIMA ✅*
 
 Detail Transaksi:
 - ID Transaksi: ${transaction.id}
@@ -400,7 +400,7 @@ async function handleRejectCommand(ctx) {
   // Update admin notification message
   try {
     const user = await require('../database').users.getByTelegramId(transaction.user_id);
-    const newCaption = `**PEMBAYARAN DITOLAK ❌**
+    const newCaption = `*PEMBAYARAN DITOLAK ❌*
 
 Detail Transaksi:
 - ID Transaksi: ${transaction.id}
@@ -474,7 +474,7 @@ async function handleApproveButton(ctx, transactionId) {
   // Update admin notification message
   try {
     const user = await require('../database').users.getByTelegramId(transaction.user_id);
-    const newCaption = `**PEMBAYARAN DITERIMA ✅**
+    const newCaption = `*PEMBAYARAN DITERIMA ✅*
 
 Detail Transaksi:
 - ID Transaksi: ${transaction.id}

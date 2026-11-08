@@ -39,7 +39,7 @@ async function handleStart(ctx) {
   
   if (!isAvailable) {
     return ctx.replyWithPhoto(film.poster_file_id, {
-      caption: `**DETAIL FILM**
+      caption: `*DETAIL FILM*
 
 Judul: ${film.title}
 

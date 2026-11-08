@@ -10,7 +10,7 @@ const config = require('../config');
 async function sendFilmDetails(ctx, film, includeBuyButton = true) {
   const formatCurrency = require('../utils/formatCurrency');
   
-  const caption = `**DETAIL FILM**
+  const caption = `*DETAIL FILM*
 
 Judul: ${film.title}
 
@@ -39,7 +39,7 @@ Harga: ${formatCurrency(film.price)}`;
 async function sendPaymentInstructions(ctx, transaction, film) {
   const formatCurrency = require('../utils/formatCurrency');
   
-  const caption = `**PEMBAYARAN FILM**
+  const caption = `*PEMBAYARAN FILM*
 
 Detail Pembelian:
 - Film: ${film.title}
@@ -73,7 +73,7 @@ Status: Menunggu pembayaran.`;
 async function sendAdminVerificationRequest(ctx, transaction, film, user, proofFileId) {
   const formatCurrency = require('../utils/formatCurrency');
   
-  const caption = `**PEMBAYARAN MENUNGGU VERIFIKASI**
+  const caption = `*PEMBAYARAN MENUNGGU VERIFIKASI*
 
 Detail Transaksi:
 - ID Transaksi: ${transaction.id}
@@ -135,7 +135,7 @@ function formatFilmForAdmin(film, index, total) {
   const formatCurrency = require('../utils/formatCurrency');
   const hasVideo = film.video_file_id !== null;
   
-  return `**FILM MANAGEMENT**
+  return `*FILM MANAGEMENT*
 
 Judul: ${film.title}
 
