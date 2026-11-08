@@ -532,6 +532,53 @@ async function handleRejectButton(ctx, transactionId) {
   await ctx.answerCbQuery('Silakan kirimkan alasan penolakan dengan format: /tolak <Alasan>');
 }
 
+/**
+ * Handle /admin command - Show admin help menu
+ */
+async function handleAdminHelp(ctx) {
+  const message = `**📖 PANDUAN ADMIN**
+
+Selamat datang, Admin! Berikut adalah daftar command yang tersedia:
+
+**🎬 Manajemen Film**
+
+\`/addfilm <ID> <Harga> <Judul>\`
+Menambahkan film baru dengan poster.
+Cara: Reply foto poster, lalu kirim command.
+Contoh: /addfilm FILM001 25000 Interstellar
+
+\`/addmedia <ID>\`
+Menambahkan video ke film.
+Cara: Reply video, lalu kirim command.
+Contoh: /addmedia FILM001
+
+\`/film\`
+Melihat daftar film dengan pagination.
+
+**💰 Verifikasi Pembayaran**
+
+\`/terima\`
+Menerima pembayaran.
+Cara: Reply notifikasi transaksi, lalu kirim command.
+
+\`/tolak <Alasan>\`
+Menolak pembayaran.
+Cara: Reply notifikasi transaksi, lalu kirim command.
+Contoh: /tolak Bukti tidak valid
+
+**📝 Tips**
+- Gunakan tombol inline untuk approve/reject
+- Cek detail film dengan /film
+- Link share: https://t.me/BOT_USERNAME?start=FILM_ID
+
+**⚠️ Peringatan**
+- Hanya admin yang bisa menggunakan command ini
+- Transaksi yang sudah diproses tidak bisa diubah
+- Pastikan video sudah di-upload sebelum promosi`;
+
+  return ctx.reply(message, { parse_mode: 'Markdown' });
+}
+
 module.exports = {
   handleAddFilm,
   handleAddMedia,
@@ -540,5 +587,6 @@ module.exports = {
   handleApproveCommand,
   handleRejectCommand,
   handleApproveButton,
-  handleRejectButton
+  handleRejectButton,
+  handleAdminHelp
 };

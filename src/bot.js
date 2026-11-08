@@ -15,6 +15,7 @@ const { trackUser, getPendingTransaction } = require('./middlewares/user');
 const { handleStart } = require('./handlers/start');
 const { handlePaymentButton } = require('./handlers/payment');
 const { handleProofUpload, handleNonPhotoPayment } = require('./handlers/proof');
+const { handleMenu } = require('./handlers/menu');
 const {
   handleAddFilm,
   handleAddMedia,
@@ -23,7 +24,8 @@ const {
   handleApproveCommand,
   handleRejectCommand,
   handleApproveButton,
-  handleRejectButton
+  handleRejectButton,
+  handleAdminHelp
 } = require('./handlers/admin');
 
 // Validate configuration
@@ -74,6 +76,9 @@ function setupHandlers() {
   // Start command - handles deep links
   bot.command('start', handleStart);
   
+  // Menu command - user guide
+  bot.command('menu', handleMenu);
+  
   // Payment button callback
   bot.action(/^pay_(.+)$/, async (ctx) => {
     const filmId = ctx.match[1];
@@ -104,6 +109,7 @@ function setupHandlers() {
   });
   
   // Admin commands
+  bot.command('admin', adminOnly, handleAdminHelp);
   bot.command('addfilm', adminOnly, handleAddFilm);
   bot.command('addmedia', adminOnly, handleAddMedia);
   bot.command('film', adminOnly, handleFilmList);
