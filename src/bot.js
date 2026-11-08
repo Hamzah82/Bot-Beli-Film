@@ -83,17 +83,24 @@ function setupHandlers() {
   bot.command('admin', adminOnly, handleAdminHelp);
   
   // Temp command to get file_id (remove after getting QRIS file_id)
-  bot.command('getfileid', adminOnly, async (ctx) => {
+  bot.command('getfileid', async (ctx) => {
+    console.log('getfileid called by user:', ctx.from.id);
+    
     const replyTo = ctx.message.reply_to_message;
+    console.log('Reply to:', replyTo ? 'yes' : 'no');
+    
     if (replyTo?.photo) {
       const photos = replyTo.photo;
+      console.log('Photo sizes:', photos.length);
       const fileId = photos[photos.length - 1].file_id;
+      console.log('File ID:', fileId);
       return ctx.reply(
         `File ID untuk foto ini:\n\n\`${fileId}\`\n\nCopy dan paste ke .env sebagai QRIS_IMAGE_FILE_ID`,
         { parse_mode: 'Markdown' }
       );
     } else if (replyTo?.video) {
       const fileId = replyTo.video.file_id;
+      console.log('Video File ID:', fileId);
       return ctx.reply(
         `File ID untuk video ini:\n\n\`${fileId}\`\n\nCopy dan simpan sesuai kebutuhan`,
         { parse_mode: 'Markdown' }
