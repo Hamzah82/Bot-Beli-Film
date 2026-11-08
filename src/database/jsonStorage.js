@@ -98,7 +98,10 @@ async function writeJSON(filename, data) {
     queue.push({ data, resolve, reject });
     
     if (isFirst) {
-      processWriteQueue(filename);
+      // Ensure we await and handle errors properly
+      processWriteQueue(filename).catch(err => {
+        console.error('Queue processing error:', err);
+      });
     }
   });
 }

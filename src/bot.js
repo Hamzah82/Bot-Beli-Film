@@ -4,12 +4,15 @@
 
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
+const fs = require('fs');
+const path = require('path');
 const config = require('./config');
 const db = require('./database');
 
 // Middlewares
 const { adminOnly } = require('./middlewares/admin');
 const { trackUser, getPendingTransaction } = require('./middlewares/user');
+const rateLimit = require('./middlewares/rateLimit');
 
 // Handlers
 const { handleStart } = require('./handlers/start');
@@ -35,7 +38,8 @@ if (!config.botToken) {
 }
 
 if (!config.botUsername) {
-  console.warn('Warning: BOT_USERNAME is not set. Share links may not work correctly.');
+  console.error('Error: BOT_USERNAME is required for share links to work');
+  process.exit(1);
 }
 
 // Create bot instance
@@ -67,6 +71,32 @@ async function initialize() {
 function setupMiddlewares() {
   // Track user on every message
   bot.use(trackUser);
+  
+  // Rate limiting for callback queries
+  bot.use(rateLimit);
+}
+
+/**
+ * Setup health check
+ */
+function setupHealthCheck() {
+  const healthFile = path.join(__dirname, '../health.json');
+  
+  setInterval(() => {
+    try {
+      fs.writeFileSync(
+        healthFile,
+        JSON.stringify({ 
+          status: 'ok', 
+          timestamp: new Date().toISOString(),
+          pid: process.pid,
+          uptime: process.uptime()
+        })
+      );
+    } catch (error) {
+      console.error('Failed to write health check:', error.message);
+    }
+  }, 30000);
 }
 
 /**
@@ -82,9 +112,9 @@ function setupHandlers() {
   // Admin command - admin guide
   bot.command('admin', adminOnly, handleAdminHelp);
   
-  // Temp command to get file_id (remove after getting QRIS file_id)
-  bot.command('getfileid', async (ctx) => {
-    console.log('getfileid called by user:', ctx.from.id);
+  // Admin utility command to get file_id
+  bot.command('getfileid', adminOnly, async (ctx) => {
+    console.log('getfileid called by admin:', ctx.from.id);
     
     const replyTo = ctx.message.reply_to_message;
     console.log('Reply to:', replyTo ? 'yes' : 'no');
@@ -172,15 +202,26 @@ function setupHandlers() {
     await handleApproveButton(ctx, transactionId);
   });
   
-  bot.action(/^reject_(TRX-[A-Z0-9]{8})$/, async (ctx) => {
+  bot.action(/^reject_(TRX-[A-Z0-9]{12})$/, async (ctx) => {
     const transactionId = ctx.match[1];
     await handleRejectButton(ctx, transactionId);
   });
   
-  // Error handling
+  // Error handling with logging
   bot.catch((err, ctx) => {
-    console.error('Bot error:', err);
-    ctx.reply('⚠️ Terjadi kesalahan. Silakan coba lagi.');
+    console.error('Bot error:', {
+      error: err.message,
+      stack: err.stack,
+      userId: ctx.from?.id,
+      chatId: ctx.chat?.id,
+      updateType: ctx.updateType
+    });
+    
+    if (ctx.callbackQuery) {
+      ctx.answerCbQuery('Terjadi kesalahan. Silakan coba lagi.', { show_alert: true });
+    } else {
+      ctx.reply('⚠️ Terjadi kesalahan. Silakan coba lagi.');
+    }
   });
 }
 
@@ -191,12 +232,13 @@ async function startBot() {
   await initialize();
   setupMiddlewares();
   setupHandlers();
+  setupHealthCheck();
   
   // Start polling
   bot.launch();
   
   console.log('Bot started successfully!');
-  console.log(`Bot username: @${config.botUsername || 'not set'}`);
+  console.log(`Bot username: @${config.botUsername}`);
   
   // Graceful shutdown
   process.once('SIGINT', () => bot.stop('SIGINT'));

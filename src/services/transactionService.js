@@ -7,41 +7,49 @@ const generateTransactionId = require('../utils/generateTransactionId');
 const config = require('../config');
 
 /**
- * Create new transaction
+ * Create new transaction with user locking to prevent race conditions
  */
 async function createTransaction(userId, filmId, amount) {
-  // Check if user has pending transaction
-  const pending = await db.transactions.getPendingByUserId(userId);
-  if (pending) {
-    return { 
-      success: false, 
-      error: 'Anda memiliki transaksi yang masih pending',
-      transaction: pending
+  try {
+    // Acquire lock for this user to prevent concurrent transaction creation
+    await db.acquireUserLock(userId);
+    
+    // Check if user has pending transaction
+    const pending = await db.transactions.getPendingByUserId(userId);
+    if (pending) {
+      return { 
+        success: false, 
+        error: 'Anda memiliki transaksi yang masih pending',
+        transaction: pending
+      };
+    }
+    
+    const transactionId = generateTransactionId();
+    const now = new Date().toISOString();
+    
+    const transactionData = {
+      id: transactionId,
+      user_id: userId,
+      film_id: filmId,
+      amount,
+      status: config.transactionStatus.WAITING_PAYMENT,
+      proof_file_id: null,
+      rejection_reason: null,
+      admin_id: null,
+      admin_message_id: null,
+      admin_chat_id: null,
+      delivery_status: config.deliveryStatus.PENDING,
+      created_at: now,
+      updated_at: now
     };
+    
+    await db.transactions.create(transactionData);
+    
+    return { success: true, transaction: transactionData };
+  } finally {
+    // Always release lock
+    db.releaseUserLock(userId);
   }
-  
-  const transactionId = generateTransactionId();
-  const now = new Date().toISOString();
-  
-  const transactionData = {
-    id: transactionId,
-    user_id: userId,
-    film_id: filmId,
-    amount,
-    status: config.transactionStatus.WAITING_PAYMENT,
-    proof_file_id: null,
-    rejection_reason: null,
-    admin_id: null,
-    admin_message_id: null,
-    admin_chat_id: null,
-    delivery_status: config.deliveryStatus.PENDING,
-    created_at: now,
-    updated_at: now
-  };
-  
-  await db.transactions.create(transactionData);
-  
-  return { success: true, transaction: transactionData };
 }
 
 /**

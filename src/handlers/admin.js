@@ -7,9 +7,20 @@ const transactionService = require('../services/transactionService');
 const filmService = require('../services/filmService');
 const telegramService = require('../services/telegramService');
 const formatCurrency = require('../utils/formatCurrency');
+const { escapeMarkdown } = require('../utils/escape');
 
-// Store pagination state per admin
+// Store pagination state per admin with TTL
 const paginationStates = new Map();
+
+// Clean up pagination states every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  paginationStates.forEach((state, adminId) => {
+    if (state.timestamp && (now - state.timestamp > 3600000)) { // 1 hour
+      paginationStates.delete(adminId);
+    }
+  });
+}, 300000);
 
 /**
  * Handle /addfilm command
@@ -46,9 +57,22 @@ async function handleAddFilm(ctx) {
   const price = parseInt(args[1]);
   const title = args.slice(2).join(' ');
   
+  // Validate film ID
+  if (!/^[A-Z0-9_-]{3,20}$/.test(id)) {
+    return ctx.reply('⚠️ ID film harus 3-20 karakter, hanya huruf besar, angka, underscore, dan strip.');
+  }
+  
   // Validate price
-  if (isNaN(price) || price <= 0) {
-    return ctx.reply('⚠️ Harga harus berupa angka positif.');
+  const MIN_PRICE = 1000;
+  const MAX_PRICE = 100000000; // 100 million IDR
+  
+  if (isNaN(price) || price < MIN_PRICE || price > MAX_PRICE) {
+    return ctx.reply(`⚠️ Harga harus antara ${formatCurrency(MIN_PRICE)} dan ${formatCurrency(MAX_PRICE)}.`);
+  }
+  
+  // Validate title length
+  if (title.length < 1 || title.length > 200) {
+    return ctx.reply('⚠️ Judul film harus 1-200 karakter.');
   }
   
   // Get highest quality photo
@@ -67,7 +91,7 @@ async function handleAddFilm(ctx) {
   return ctx.reply(
     `✅ Film berhasil ditambahkan!\n\n` +
     `ID: ${film.id}\n` +
-    `Judul: ${film.title}\n` +
+    `Judul: ${escapeMarkdown(film.title)}\n` +
     `Harga: ${formatCurrency(film.price)}\n\n` +
     `Poster berhasil disimpan.\n\n` +
     `Tambahkan video menggunakan /addmedia ${film.id} dengan me-reply video.`
@@ -106,6 +130,12 @@ async function handleAddMedia(ctx) {
   }
   
   const filmId = args[0].toUpperCase();
+  
+  // Validate film ID format
+  if (!/^[A-Z0-9_-]{3,20}$/.test(filmId)) {
+    return ctx.reply('⚠️ ID film harus 3-20 karakter, hanya huruf besar, angka, underscore, dan strip.');
+  }
+  
   const videoFileId = replyTo.video.file_id;
   
   // Add media to film
@@ -141,7 +171,8 @@ async function handleFilmList(ctx) {
   paginationStates.set(adminId, {
     currentPage: 0,
     totalItems: films.length,
-    messageId: null
+    messageId: null,
+    timestamp: Date.now()
   });
   
   const state = paginationStates.get(adminId);
@@ -447,6 +478,13 @@ Alasan: ${reason}`;
  */
 async function handleApproveButton(ctx, transactionId) {
   const userId = ctx.from.id;
+  
+  // Disable buttons immediately to prevent replay
+  try {
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+  } catch (e) {
+    // Buttons might already be removed
+  }
   
   // Verify transaction exists
   const transaction = await transactionService.getTransactionById(transactionId);

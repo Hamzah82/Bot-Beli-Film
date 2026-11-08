@@ -44,6 +44,11 @@ async function handleStart(ctx) {
   // Extract film ID from start parameter
   const filmId = startParam.trim().toUpperCase();
   
+  // Validate film ID format
+  if (!/^[A-Z0-9_-]{3,20}$/.test(filmId)) {
+    return ctx.reply('⚠️ Format ID film tidak valid.');
+  }
+  
   // Get film details
   const result = await filmService.getFilmById(filmId);
   
