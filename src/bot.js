@@ -79,6 +79,35 @@ function setupHandlers() {
   // Menu command - user guide
   bot.command('menu', handleMenu);
   
+  // Admin command - admin guide
+  bot.command('admin', adminOnly, handleAdminHelp);
+  
+  // Temp command to get file_id (remove after getting QRIS file_id)
+  bot.command('getfileid', adminOnly, async (ctx) => {
+    const replyTo = ctx.message.reply_to_message;
+    if (replyTo?.photo) {
+      const photos = replyTo.photo;
+      const fileId = photos[photos.length - 1].file_id;
+      return ctx.reply(
+        `File ID untuk foto ini:\n\n\`${fileId}\`\n\nCopy dan paste ke .env sebagai QRIS_IMAGE_FILE_ID`,
+        { parse_mode: 'Markdown' }
+      );
+    } else if (replyTo?.video) {
+      const fileId = replyTo.video.file_id;
+      return ctx.reply(
+        `File ID untuk video ini:\n\n\`${fileId}\`\n\nCopy dan simpan sesuai kebutuhan`,
+        { parse_mode: 'Markdown' }
+      );
+    } else {
+      return ctx.reply(
+        '⚠️ Cara penggunaan:\n\n' +
+        '1. Kirim foto/video ke bot\n' +
+        '2. Reply foto/video tersebut dengan /getfileid\n' +
+        '3. Copy file_id yang muncul'
+      );
+    }
+  });
+  
   // Payment button callback
   bot.action(/^pay_(.+)$/, async (ctx) => {
     const filmId = ctx.match[1];
@@ -117,7 +146,6 @@ function setupHandlers() {
   });
   
   // Admin commands
-  bot.command('admin', adminOnly, handleAdminHelp);
   bot.command('addfilm', adminOnly, handleAddFilm);
   bot.command('addmedia', adminOnly, handleAddMedia);
   bot.command('film', adminOnly, handleFilmList);
