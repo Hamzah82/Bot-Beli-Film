@@ -9,7 +9,28 @@ const telegramService = require('../services/telegramService');
  * Handle /start command with optional film ID
  */
 async function handleStart(ctx) {
-  const startParam = ctx.startPayload;
+  // Get start parameter from message text or startPayload
+  const messageText = ctx.message?.text || '';
+  const startPayload = ctx.startPayload || '';
+  
+  // Log for debugging
+  console.log('Start handler triggered');
+  console.log('Message text:', messageText);
+  console.log('Start payload:', startPayload);
+  
+  // Extract parameter from /start command
+  // Format: /start FILM_ID or /start=FILM_ID
+  let startParam = startPayload;
+  
+  if (!startParam && messageText.includes(' ')) {
+    // If using space format: /start FILM_ID
+    startParam = messageText.split(' ')[1];
+  } else if (!startParam && messageText.includes('=')) {
+    // If using = format: /start=FILM_ID (from deep link)
+    startParam = messageText.split('=')[1];
+  }
+  
+  console.log('Extracted film ID:', startParam);
   
   // If no parameter, show generic message
   if (!startParam) {
