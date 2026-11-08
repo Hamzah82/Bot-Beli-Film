@@ -1,0 +1,22 @@
+{
+  "name": "telegram-film-bot",
+  "version": "1.0.0",
+  "description": "Telegram Film Store Bot with QRIS payment system",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "dev": "node src/bot.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "film",
+    "store"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "dotenv": "^16.4.5"
+  }
+}
