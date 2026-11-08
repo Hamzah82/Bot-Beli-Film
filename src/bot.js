@@ -90,10 +90,18 @@ function setupHandlers() {
     await handleProofUpload(ctx);
   });
   
-  // Handle text messages for payment instructions
+  // Handle text messages for payment instructions and deep link clicks
   bot.on('text', async (ctx, next) => {
-    // Skip commands
-    if (ctx.message.text.startsWith('/')) {
+    const text = ctx.message.text || '';
+    
+    // Check if this is a start command with parameter (deep link click for already started users)
+    if (text.startsWith('/start')) {
+      // Pass to start handler
+      return handleStart(ctx);
+    }
+    
+    // Skip other commands
+    if (text.startsWith('/')) {
       return next();
     }
     
