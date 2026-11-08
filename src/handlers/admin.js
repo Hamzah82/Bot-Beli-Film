@@ -536,11 +536,11 @@ async function handleRejectButton(ctx, transactionId) {
  * Handle /admin command - Show admin help menu
  */
 async function handleAdminHelp(ctx) {
-  const message = `**📖 PANDUAN ADMIN**
+  const message = `📖 *PANDUAN ADMIN*
 
 Selamat datang, Admin! Berikut adalah daftar command yang tersedia:
 
-**🎬 Manajemen Film**
+🎬 *Manajemen Film*
 
 \`/addfilm <ID> <Harga> <Judul>\`
 Menambahkan film baru dengan poster.
@@ -555,7 +555,7 @@ Contoh: /addmedia FILM001
 \`/film\`
 Melihat daftar film dengan pagination.
 
-**💰 Verifikasi Pembayaran**
+💰 *Verifikasi Pembayaran*
 
 \`/terima\`
 Menerima pembayaran.
@@ -566,12 +566,12 @@ Menolak pembayaran.
 Cara: Reply notifikasi transaksi, lalu kirim command.
 Contoh: /tolak Bukti tidak valid
 
-**📝 Tips**
+📝 *Tips*
 - Gunakan tombol inline untuk approve/reject
 - Cek detail film dengan /film
 - Link share: https://t.me/BOT_USERNAME?start=FILM_ID
 
-**⚠️ Peringatan**
+⚠️ *Peringatan*
 - Hanya admin yang bisa menggunakan command ini
 - Transaksi yang sudah diproses tidak bisa diubah
 - Pastikan video sudah di-upload sebelum promosi`;
