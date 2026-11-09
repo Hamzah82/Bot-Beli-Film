@@ -94,7 +94,9 @@ const transactions = {
     
     return allTransactions.find(tx => {
       if (tx.user_id !== userId) return false;
-      if (tx.status === 'APPROVED' || tx.status === 'REJECTED' || tx.status === 'EXPIRED') return false;
+      
+      // Exclude final statuses
+      if (['APPROVED', 'REJECTED', 'EXPIRED', 'CANCELLED'].includes(tx.status)) return false;
       
       // Check expiry
       const created = new Date(tx.created_at);
