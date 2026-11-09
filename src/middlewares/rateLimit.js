@@ -1,18 +1,26 @@
 /**
  * Rate Limiting Middleware
  * Prevents spam and abuse by limiting request frequency
+ * ADMITS ADMINS - No rate limiting for admin users
  */
 
+const db = require('../database');
 const userRequests = new Map();
 const RATE_LIMIT_MS = 5000; // 5 seconds between requests
 
 /**
- * Rate limiting middleware
+ * Rate limiting middleware - SKIPS FOR ADMINS
  */
-function rateLimit(ctx, next) {
+async function rateLimit(ctx, next) {
   const userId = ctx.from?.id;
   
   if (!userId) {
+    return next();
+  }
+  
+  // Check if user is admin - skip rate limiting for admins
+  const isAdmin = await db.admins.isAdmin(userId);
+  if (isAdmin) {
     return next();
   }
   

@@ -67,12 +67,9 @@ async function handleAddFilm(ctx) {
     return ctx.reply('⚠️ ID film harus 3-20 karakter, hanya huruf besar, angka, underscore, dan strip.');
   }
   
-  // Validate price
-  const MIN_PRICE = 1000;
-  const MAX_PRICE = 100000000; // 100 million IDR
-  
-  if (isNaN(price) || price < MIN_PRICE || price > MAX_PRICE) {
-    return ctx.reply(`⚠️ Harga harus antara ${formatCurrency(MIN_PRICE)} dan ${formatCurrency(MAX_PRICE)}.`);
+  // Validate price - only check if it's a valid number
+  if (isNaN(price) || price < 0) {
+    return ctx.reply('⚠️ Harga harus berupa angka positif.');
   }
   
   // Validate title length
@@ -186,12 +183,9 @@ async function handleSetPrice(ctx) {
     return ctx.reply('⚠️ ID film harus 3-20 karakter, hanya huruf besar, angka, underscore, dan strip.');
   }
   
-  // Validate price
-  const MIN_PRICE = 1000;
-  const MAX_PRICE = 100000000; // 100 million IDR
-  
-  if (isNaN(newPrice) || newPrice < MIN_PRICE || newPrice > MAX_PRICE) {
-    return ctx.reply(`⚠️ Harga harus antara ${formatCurrency(MIN_PRICE)} dan ${formatCurrency(MAX_PRICE)}.`);
+  // Validate price - only check if it's a valid number
+  if (isNaN(newPrice) || newPrice < 0) {
+    return ctx.reply('⚠️ Harga harus berupa angka positif.');
   }
   
   // Get film
