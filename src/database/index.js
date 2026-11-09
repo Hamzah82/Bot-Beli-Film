@@ -135,6 +135,71 @@ const transactions = {
   }
 };
 
+/**
+ * Users operations
+ */
+const users = {
+  async getAll() {
+    const data = await jsonStorage.readJSON('users.json');
+    return data?.users || [];
+  },
+
+  async getByTelegramId(telegramId) {
+    const allUsers = await this.getAll();
+    return allUsers.find(user => user.telegram_id === telegramId) || null;
+  },
+
+  async createOrUpdate(userData) {
+    const existing = await this.getByTelegramId(userData.telegram_id);
+    
+    if (existing) {
+      return existing;
+    }
+
+    await jsonStorage.updateJSON('users.json', (data) => {
+      data.users.push({
+        ...userData,
+        created_at: new Date().toISOString()
+      });
+      return data;
+    });
+
+    return await this.getByTelegramId(userData.telegram_id);
+  }
+};
+
+/**
+ * Admins operations
+ */
+const admins = {
+  async getAll() {
+    const data = await jsonStorage.readJSON('admins.json');
+    return data?.admins || [];
+  },
+
+  async isAdmin(telegramId) {
+    const allAdmins = await this.getAll();
+    return allAdmins.some(admin => admin.telegram_id === telegramId);
+  },
+
+  async add(telegramId) {
+    const isAdmin = await this.isAdmin(telegramId);
+    if (isAdmin) return;
+
+    await jsonStorage.updateJSON('admins.json', (data) => {
+      data.admins.push({ telegram_id: telegramId });
+      return data;
+    });
+  },
+
+  async remove(telegramId) {
+    await jsonStorage.updateJSON('admins.json', (data) => {
+      data.admins = data.admins.filter(admin => admin.telegram_id !== telegramId);
+      return data;
+    });
+  }
+};
+
 module.exports = {
   films,
   transactions,
