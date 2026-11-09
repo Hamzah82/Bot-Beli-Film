@@ -634,19 +634,27 @@ Backup berisi: films.json, transactions.json, users.json, admins.json
  */
 async function handleBackup(ctx) {
   try {
+    console.log('Backup command triggered by user:', ctx.from.id);
+    
     const dataDir = path.join(__dirname, '../../data');
     const backupDir = path.join(__dirname, '../../backups');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupFilename = `backup-${timestamp}.zip`;
     const backupPath = path.join(backupDir, backupFilename);
     
+    console.log('Data directory:', dataDir);
+    console.log('Backup directory:', backupDir);
+    console.log('Backup filename:', backupFilename);
+    
     // Send processing message
     const processingMsg = await ctx.reply('⏳ Membuat backup data...');
     
     // Ensure backup directory exists
     await fs.mkdir(backupDir, { recursive: true });
+    console.log('Backup directory created/verified');
     
     // Create zip archive
+    console.log('Creating zip archive...');
     await new Promise((resolve, reject) => {
       const output = fsSync.createWriteStream(backupPath);
       const archive = archiver('zip', { zlib: { level: 9 } });
@@ -657,16 +665,25 @@ async function handleBackup(ctx) {
       });
       
       archive.on('error', (err) => {
+        console.error('Archive error:', err);
         reject(err);
+      });
+      
+      archive.on('warning', (err) => {
+        console.warn('Archive warning:', err);
       });
       
       archive.pipe(output);
       
       // Add all files from data directory
+      console.log('Adding data directory to archive...');
       archive.directory(dataDir, 'data');
       
       archive.finalize();
+      console.log('Archive finalized');
     });
+    
+    console.log('Zip archive created successfully');
     
     // Delete processing message
     await ctx.deleteMessage(processingMsg.message_id);
@@ -704,6 +721,8 @@ async function handleBackup(ctx) {
         parse_mode: 'Markdown'
       }
     );
+    
+    console.log('Backup file sent to admin successfully');
     
     // Clean up old backups (keep last 5)
     try {
