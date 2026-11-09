@@ -199,7 +199,7 @@ function setupHandlers() {
   });
   
   // Admin button callbacks for payment verification
-  bot.action(/^approve_(TRX-[A-Z0-9]{8})$/, adminOnly, async (ctx) => {
+  bot.action(/^approve_(TRX-[A-Z0-9]{12})$/, adminOnly, async (ctx) => {
     const transactionId = ctx.match[1];
     await handleApproveButton(ctx, transactionId);
   });

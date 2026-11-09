@@ -288,7 +288,7 @@ async function handleApproveCommand(ctx) {
   // Extract transaction ID from replied message
   // Transaction ID is in the format: TRX-XXXXXXXX
   const caption = replyTo.caption || '';
-  const match = caption.match(/TRX-[A-Z0-9]{8}/);
+  const match = caption.match(/TRX-[A-Z0-9]{12}/);
   
   if (!match) {
     return ctx.reply('⚠️ Tidak dapat menemukan ID transaksi pada pesan yang di-reply.');
@@ -394,7 +394,7 @@ async function handleRejectCommand(ctx) {
   
   // Extract transaction ID from replied message
   const caption = replyTo.caption || '';
-  const match = caption.match(/TRX-[A-Z0-9]{8}/);
+  const match = caption.match(/TRX-[A-Z0-9]{12}/);
   
   if (!match) {
     return ctx.reply('⚠️ Tidak dapat menemukan ID transaksi pada pesan yang di-reply.');
