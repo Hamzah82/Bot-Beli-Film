@@ -40,7 +40,7 @@ async function sendPaymentInstructions(ctx, transaction, film) {
   const formatCurrency = require('../utils/formatCurrency');
   
   const caption = `*PEMBAYARAN FILM*
-
+  
 Detail Pembelian:
 - Film: ${film.title}
 - ID Film: ${film.id}
@@ -54,18 +54,26 @@ Instruksi:
 4. Tunggu verifikasi dari admin.
 
 Status: Menunggu pembayaran.`;
+
+  const keyboard = {
+    inline_keyboard: [
+      [{ text: '❌ Batalkan Pembayaran', callback_data: `cancel_payment_${transaction.id}` }]
+    ]
+  };
   
   try {
     if (config.qrisImageFileId) {
       console.log('Sending QRIS image with file_id:', config.qrisImageFileId);
       await ctx.replyWithPhoto(config.qrisImageFileId, {
         caption,
-        parse_mode: 'Markdown'
+        parse_mode: 'Markdown',
+        reply_markup: keyboard
       });
       console.log('Payment instructions sent successfully');
     } else {
       await ctx.reply(caption + '\n\n⚠️ QRIS belum dikonfigurasi. Pembayaran tidak dapat dilanjutkan.', {
-        parse_mode: 'Markdown'
+        parse_mode: 'Markdown',
+        reply_markup: keyboard
       });
     }
   } catch (error) {

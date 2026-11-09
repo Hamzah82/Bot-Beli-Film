@@ -1,8 +1,9 @@
 /**
- * Payment Handler - Handles payment initialization
+ * Payment Handler - Handles payment initialization and cancellation
  */
 
 const config = require('../config');
+const db = require('../database');
 const transactionService = require('../services/transactionService');
 const filmService = require('../services/filmService');
 const telegramService = require('../services/telegramService');
@@ -78,6 +79,55 @@ async function handlePaymentButton(ctx, filmId) {
   }
 }
 
+/**
+ * Handle cancel payment button
+ */
+async function handleCancelPayment(ctx, transactionId) {
+  try {
+    const userId = ctx.from.id;
+    
+    console.log('Cancel payment clicked for transaction:', transactionId, 'by user:', userId);
+    
+    // Get transaction
+    const transaction = await db.transactions.getById(transactionId);
+    
+    if (!transaction) {
+      return ctx.answerCbQuery('Transaksi tidak ditemukan.', { show_alert: true });
+    }
+    
+    // Verify ownership
+    if (transaction.user_id !== userId) {
+      return ctx.answerCbQuery('Transaksi ini bukan milik Anda.', { show_alert: true });
+    }
+    
+    // Check if transaction can be cancelled
+    if (transaction.status !== 'WAITING_PAYMENT') {
+      return ctx.answerCbQuery('Transaksi ini tidak dapat dibatalkan.', { show_alert: true });
+    }
+    
+    // Update transaction status to CANCELLED
+    await db.transactions.update(transactionId, { status: 'CANCELLED' });
+    
+    console.log('Transaction cancelled:', transactionId);
+    
+    // Delete the payment instruction message
+    try {
+      await ctx.deleteMessage();
+    } catch (error) {
+      console.log('Could not delete message:', error.message);
+    }
+    
+    // Notify user
+    await ctx.reply('✅ Pembayaran berhasil dibatalkan. Anda dapat melakukan pembelian kembali kapan saja.');
+    
+    await ctx.answerCbQuery('Pembayaran dibatalkan.');
+  } catch (error) {
+    console.error('Error in handleCancelPayment:', error);
+    return ctx.answerCbQuery('Terjadi kesalahan. Silakan coba lagi.', { show_alert: true });
+  }
+}
+
 module.exports = {
-  handlePaymentButton
+  handlePaymentButton,
+  handleCancelPayment
 };

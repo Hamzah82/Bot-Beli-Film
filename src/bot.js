@@ -16,7 +16,7 @@ const rateLimit = require('./middlewares/rateLimit');
 
 // Handlers
 const { handleStart } = require('./handlers/start');
-const { handlePaymentButton } = require('./handlers/payment');
+const { handlePaymentButton, handleCancelPayment } = require('./handlers/payment');
 const { handleProofUpload, handleNonPhotoPayment } = require('./handlers/proof');
 const { handleMenu } = require('./handlers/menu');
 const {
@@ -149,6 +149,12 @@ function setupHandlers() {
   bot.action(/^pay_(.+)$/, async (ctx) => {
     const filmId = ctx.match[1];
     await handlePaymentButton(ctx, filmId);
+  });
+  
+  // Cancel payment button
+  bot.action(/^cancel_payment_(TRX-[A-Z0-9]{12})$/, async (ctx) => {
+    const transactionId = ctx.match[1];
+    await handleCancelPayment(ctx, transactionId);
   });
   
   // Payment proof upload (photo)
