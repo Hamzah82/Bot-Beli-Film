@@ -22,6 +22,7 @@ const { handleMenu } = require('./handlers/menu');
 const {
   handleAddFilm,
   handleAddMedia,
+  handleSetPrice,
   handleFilmList,
   handleFilmPagination,
   handleApproveCommand,
@@ -184,6 +185,7 @@ function setupHandlers() {
   // Admin commands
   bot.command('addfilm', adminOnly, handleAddFilm);
   bot.command('addmedia', adminOnly, handleAddMedia);
+  bot.command('setprice', adminOnly, handleSetPrice);
   bot.command('film', adminOnly, handleFilmList);
   bot.command('terima', adminOnly, handleApproveCommand);
   bot.command('tolak', adminOnly, handleRejectCommand);

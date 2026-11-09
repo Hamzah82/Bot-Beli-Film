@@ -3,6 +3,7 @@
  */
 
 const config = require('../config');
+const db = require('../database');
 const transactionService = require('../services/transactionService');
 const filmService = require('../services/filmService');
 const telegramService = require('../services/telegramService');
@@ -156,6 +157,62 @@ async function handleAddMedia(ctx) {
     `ID: ${film.id}\n` +
     `Judul: ${film.title}\n\n` +
     `Film sekarang tersedia untuk dibeli.`
+  );
+}
+
+/**
+ * Handle /setprice command - Update film price
+ * Format: /setprice <ID> <Harga>
+ */
+async function handleSetPrice(ctx) {
+  const text = ctx.message?.text || '';
+  
+  // Parse command
+  const args = text.slice('/setprice'.length).trim().split(/\s+/);
+  
+  if (args.length < 2) {
+    return ctx.reply(
+      '⚠️ Format salah.\n\n' +
+      'Format: /setprice <ID> <Harga>\n' +
+      'Contoh: /setprice FILM001 30000'
+    );
+  }
+  
+  const filmId = args[0].toUpperCase();
+  const newPrice = parseInt(args[1]);
+  
+  // Validate film ID format
+  if (!/^[A-Z0-9_-]{3,20}$/.test(filmId)) {
+    return ctx.reply('⚠️ ID film harus 3-20 karakter, hanya huruf besar, angka, underscore, dan strip.');
+  }
+  
+  // Validate price
+  const MIN_PRICE = 1000;
+  const MAX_PRICE = 100000000; // 100 million IDR
+  
+  if (isNaN(newPrice) || newPrice < MIN_PRICE || newPrice > MAX_PRICE) {
+    return ctx.reply(`⚠️ Harga harus antara ${formatCurrency(MIN_PRICE)} dan ${formatCurrency(MAX_PRICE)}.`);
+  }
+  
+  // Get film
+  const filmResult = await filmService.getFilmById(filmId);
+  
+  if (!filmResult.success) {
+    return ctx.reply(`⚠️ Film dengan ID ${filmId} tidak ditemukan.`);
+  }
+  
+  const film = filmResult.film;
+  const oldPrice = film.price;
+  
+  // Update price
+  await db.films.update(filmId, { price: newPrice });
+  
+  return ctx.reply(
+    `✅ Harga film berhasil diubah!\n\n` +
+    `ID: ${film.id}\n` +
+    `Judul: ${escapeMarkdown(film.title)}\n` +
+    `Harga Lama: ${formatCurrency(oldPrice)}\n` +
+    `Harga Baru: ${formatCurrency(newPrice)}`
   );
 }
 
@@ -589,10 +646,14 @@ Menambahkan film baru dengan poster.
 Cara: Reply foto poster, lalu kirim command.
 Contoh: /addfilm FILM001 25000 Interstellar
 
-\`/addmedia <ID>\`
+  \`/addmedia <ID>\`
 Menambahkan video ke film.
 Cara: Reply video, lalu kirim command.
 Contoh: /addmedia FILM001
+
+\`/setprice <ID> <Harga>\`
+Mengubah harga film.
+Contoh: /setprice FILM001 30000
 
 \`/film\`
 Melihat daftar film dengan pagination.
@@ -755,6 +816,7 @@ async function handleBackup(ctx) {
 module.exports = {
   handleAddFilm,
   handleAddMedia,
+  handleSetPrice,
   handleFilmList,
   handleFilmPagination,
   handleApproveCommand,
